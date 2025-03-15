@@ -11,7 +11,7 @@ export function Providers({ children }) {
 
   useEffect(() => {
     async function checkAuth() {
-      !!localStorage.getItem("user")
+      !!localStorage.getItem("token")
         ? setVerified(true)
         : router.replace("/auth");
     }

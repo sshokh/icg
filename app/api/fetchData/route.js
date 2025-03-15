@@ -26,7 +26,7 @@ RESULT MUST BE IN THE FOLLOWING FORMAT { "PROFESSION": PERCENTAGE }, SHOW ONLY 3
       method: "POST",
       url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${process.env.GEMINIAI_KEY}`,
       data: { contents: [{ parts: [{ text }] }] },
-    });
+    })
 
     const message = await data.data.candidates[0].content.parts[0].text;
 
