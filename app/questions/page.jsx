@@ -60,7 +60,7 @@ export default function QuestionsPage() {
 
       const result = await response.json();
       localStorage.setItem("result", JSON.stringify(result));
-      redirect("/results");
+      router.push("/results");
     } catch (error) {
       if (error instanceof Error) {
         console.error("Error submitting data:", error.message);
