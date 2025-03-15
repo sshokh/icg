@@ -3,7 +3,6 @@ import { Inter } from "next/font/google";
 import { Providers } from "./providers";
 import "./../styles/globals.css";
 import clsx from "clsx";
-import React from "react";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -21,11 +20,7 @@ export const metadata = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }) {
   return (
     <html suppressHydrationWarning lang="en" className="dark">
       <head />

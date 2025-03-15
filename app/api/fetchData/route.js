@@ -1,19 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import axios from "axios";
 
-interface queryOptions {
-  question: string;
-  answer: string;
-}
-
-export async function POST(request: NextRequest) {
+export async function POST(request) {
   try {
     const { query } = await request.json();
 
     let text =
       "I want to see in what job I am good at so I can choose my career, here are the list of jobs and their states :\n";
 
-    query.forEach((element: queryOptions) => {
+    query.forEach(element => {
       text += `${element.answer[0].toUpperCase() + element.answer.slice(1)} at ${element.question}\n`;
     });
 

@@ -1,8 +1,9 @@
 "use client";
-
-import { useRouter } from "next/navigation";
+  
 import React, { useState, useEffect } from "react";
 import { title } from "../../misc/primitives";
+import { Icon } from "@iconify/react";
+import api from "../../misc/api";
 import {
   Card,
   CardBody,
@@ -19,25 +20,14 @@ import {
   CardFooter,
   Avatar,
 } from "@heroui/react";
-import { Icon } from "@iconify/react";
-import api from "../../misc/api";
 
 // Define missing icon components
-const Star = (props: any) => <Icon icon="solar:star-line-duotone" {...props} />;
-const ArrowLeft = (props: any) => <Icon icon="solar:arrow-left-line-duotone" {...props} />;
+const Star = (props) => <Icon icon="solar:star-line-duotone" {...props} />;
+const ArrowLeft = (props) => (
+  <Icon icon="solar:arrow-left-line-duotone" {...props} />
+);
 
-interface Review {
-  id: string | number;
-  rating: number;
-  comment: string;
-  user: {
-    username: string;
-  };
-}
-
-type JobScore = [string, number];
-
-function JobProgressList({ data }: { data: JobScore[] }) {
+function JobProgressList({ data }) {
   return (
     <>
       {data.map(([job, score], i) => (
@@ -61,7 +51,7 @@ function JobProgressList({ data }: { data: JobScore[] }) {
   );
 }
 
-function ReviewCard({ review }: { review: Review }) {
+function ReviewCard({ review }) {
   return (
     <Card>
       <CardBody className="gap-3">
@@ -89,23 +79,9 @@ function ReviewCard({ review }: { review: Review }) {
   );
 }
 
-interface ReviewModalProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  onClose: () => void;
-  rating: number;
-  setRating: (rating: number) => void;
-  comment: string;
-  setComment: (comment: string) => void;
-  isSubmitting: boolean;
-  handleSubmit: () => void;
-  hasReview: Review | null;
-}
-
 function ReviewModal({
   isOpen,
   onOpenChange,
-  onClose,
   rating,
   setRating,
   comment,
@@ -113,11 +89,11 @@ function ReviewModal({
   isSubmitting,
   handleSubmit,
   hasReview,
-}: ReviewModalProps) {
+}) {
   return (
     <Modal placement="center" isOpen={isOpen} onOpenChange={onOpenChange}>
       <ModalContent className="sm:max-w-md">
-        {(close: () => void) => (
+        {(close) => (
           <div>
             <ModalHeader className="flex flex-col">
               <p className="text-2xl font-bold text-center">
@@ -158,9 +134,7 @@ function ReviewModal({
                   variant="faded"
                   placeholder="Tell us what you think..."
                   value={comment}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                    setComment(e.target.value)
-                  }
+                  onChange={(e) => setComment(e.target.value)}
                   className="min-h-[100px]"
                 />
               </div>
@@ -187,8 +161,8 @@ function ReviewModal({
                     ? "Updating..."
                     : "Submitting..."
                   : hasReview
-                  ? "Update"
-                  : "Review"}
+                    ? "Update"
+                    : "Review"}
               </Button>
             </ModalFooter>
           </div>
@@ -199,20 +173,19 @@ function ReviewModal({
 }
 
 export default function ResultsPage() {
-  const router = useRouter();
-  const [data, setData] = useState<JobScore[]>([]);
-  const [rating, setRating] = useState<number>(1);
-  const [comment, setComment] = useState<string>("");
-  const [hasReview, setHasReview] = useState<Review | null>(null);
-  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [publicReviews, setPublicReviews] = useState<Review[]>([]);
+  const [data, setData] = useState([]);
+  const [rating, setRating] = useState(1);
+  const [comment, setComment] = useState("");
+  const [hasReview, setHasReview] = useState(null);
+  const [modalMode, setModalMode] = useState("create");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [publicReviews, setPublicReviews] = useState([]);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  
-  // Fetch reviews; for simplicity, using "any" as return type here.
-  const fetchReviews = async (own: boolean = true): Promise<any> => {
-    return (await api(`/feedback/${own ? "get_feedback/" : ""}`)).data;
-  };
+
+  async function fetchReviews(own = true) {
+    const response = await api(`/feedback/${own ? "get_feedback/" : ""}`);
+    return response.data;
+  }
 
   const handleGoBack = () => {
     router.push("/");
@@ -221,7 +194,7 @@ export default function ResultsPage() {
 
   const handleEditReview = async () => {
     setModalMode("edit");
-    onOpen(true);
+    onOpen();
     setRating(hasReview?.rating || 1);
     setComment(hasReview?.comment || "");
   };
@@ -258,13 +231,15 @@ export default function ResultsPage() {
       setHasReview(my_new_feedback.data);
       setRating(my_new_feedback.data.rating);
       setComment(my_new_feedback.data.comment);
-      onOpenChange(false);
+      onOpenChange();
       setModalMode("create");
-    } catch (error: any) {
+    } catch (error) {
       addToast({
         title: "Something went wrong",
         description:
-          "Your review could not be submitted. Please try again.",
+          error instanceof Error
+            ? error.message
+            : "Your review could not be submitted. Please try again.",
         color: "danger",
         timeout: 3000,
       });
@@ -279,11 +254,9 @@ export default function ResultsPage() {
       if (savedValue) {
         try {
           const parsedMessage = JSON.parse(savedValue);
-          const patchedMessage = JSON.parse(
-            parsedMessage.message.slice(7, -4)
-          );
-          const sortedMessage: JobScore[] = Object.entries(patchedMessage).sort(
-            (a, b) => (b[1] as number) - (a[1] as number)
+          const patchedMessage = JSON.parse(parsedMessage.message.slice(7, -4));
+          const sortedMessage = Object.entries(patchedMessage).sort(
+            (a, b) => b[1] - a[1]
           );
           setData(sortedMessage);
 
@@ -362,7 +335,6 @@ export default function ResultsPage() {
       <ReviewModal
         isOpen={isOpen}
         onOpenChange={onOpenChange}
-        onClose={() => onOpenChange(false)}
         rating={rating}
         setRating={setRating}
         comment={comment}

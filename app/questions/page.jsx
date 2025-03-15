@@ -1,18 +1,11 @@
 "use client";
 
 import { title } from "../../misc/primitives";
-import { siteConfig } from "@/config";
+import { siteConfig } from "@/config.js";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, redirect } from "next/navigation";
 
-import {
-  Select,
-  SelectItem,
-  Card,
-  CardBody,
-  Button,
-  CardFooter,
-} from "@heroui/react";
+import { Select, SelectItem, Card, CardBody, Button } from "@heroui/react";
 
 export default function QuestionsPage() {
   const [responses, setResponses] = useState([]);
@@ -24,30 +17,32 @@ export default function QuestionsPage() {
 
   useEffect(() => {
     setMounted(true);
+    if (!window.localStorage.getItem("token")) redirect("/auth");
   }, []);
 
   const handleSelectChange = (question, value) => {
     setUnselectedFields((prev) => {
       const updated = new Set(prev);
       value !== "" ? updated.delete(question) : updated.add(question);
-
       return updated;
     });
 
     setResponses((prev) => {
       const updated = [...prev];
-      const hasExistedIndex = updated.findIndex(
+      const index = updated.findIndex(
         (response) => response.question === question
       );
-      hasExistedIndex !== -1
-        ? (updated[hasExistedIndex].answer = value)
-        : updated.push({ question, answer: value });
-
+      if (index !== -1) {
+        updated[index].answer = value;
+      } else {
+        updated.push({ question, answer: value });
+      }
       return updated;
     });
   };
 
-  const handleSubmit = async (e) => {
+  // Removed the event parameter since it isn't used and may cause type issues.
+  const handleSubmit = async () => {
     const unselected = checkUnselected();
     if (unselected.size > 0) return;
 
@@ -65,9 +60,13 @@ export default function QuestionsPage() {
 
       const result = await response.json();
       localStorage.setItem("result", JSON.stringify(result));
-      router.push("/results", { shallow: true });
+      redirect("/results");
     } catch (error) {
-      console.error("Error submitting data:", error.message);
+      if (error instanceof Error) {
+        console.error("Error submitting data:", error.message);
+      } else {
+        console.error("Error submitting data:", error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -84,7 +83,6 @@ export default function QuestionsPage() {
     });
 
     setUnselectedFields(unselected);
-
     return unselected;
   };
 
@@ -93,13 +91,13 @@ export default function QuestionsPage() {
   }
 
   return (
-    <div className="flex items-center justify-center flex-col gap-8">
+    <div className="flex flex-col items-center justify-center gap-8">
       <h1 className={title({ color: "blue" }) + " p-2"}>Rate yourself...</h1>
       <Card className="w-full">
-        <CardBody className="flex p-6 gap-5">
+        <CardBody className="flex gap-5 p-6">
           {siteConfig.questions.map((question, i) => (
             <div className="flex flex-col gap-3" key={i}>
-              <div className="md:flex-row flex-col flex md:items-center justify-between gap-1">
+              <div className="flex flex-col justify-between gap-1 md:flex-row md:items-center">
                 <p className="md:max-w-48 text-wrap">{question}</p>
                 <Select
                   items={siteConfig.answers}
@@ -115,17 +113,13 @@ export default function QuestionsPage() {
                   classNames={{
                     trigger: unselectedFields.has(question)
                       ? "data-[hover=true]:bg-danger-100 !duration-300"
-                      : "data-[hover=true]:bg-default-200" + " !duration-300",
+                      : "data-[hover=true]:bg-default-200 !duration-300",
                   }}
                   className="md:w-1/2"
-                  onChange={(value) =>
-                    handleSelectChange(question, value.target.value.toString())
-                  }
+                  onChange={(e) => handleSelectChange(question, e.target.value)}
                 >
                   {(item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
+                    <SelectItem key={item.value}>{item.label}</SelectItem>
                   )}
                 </Select>
               </div>

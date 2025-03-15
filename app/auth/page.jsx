@@ -17,27 +17,6 @@ import {
 } from "@heroui/react";
 import axios from "axios";
 
-interface AuthCredentials {
-  username: string;
-  password: string;
-}
-
-interface ErrorState {
-  general: string;
-  username: string;
-  password: string;
-}
-
-interface AuthFormProps {
-  submitLabel: string;
-  errors: ErrorState;
-  isSubmitting: boolean;
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
-  showPassword: boolean;
-  togglePasswordVisibility: () => void;
-  setErrors: React.Dispatch<React.SetStateAction<ErrorState>>;
-}
-
 function AuthForm({
   submitLabel,
   errors,
@@ -46,7 +25,7 @@ function AuthForm({
   showPassword,
   togglePasswordVisibility,
   setErrors,
-}: AuthFormProps) {
+}) {
   return (
     <Form className="gap-4" validationErrors={errors} onSubmit={onSubmit}>
       <Input
@@ -129,15 +108,15 @@ export default function AuthCard() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selected, setSelected] = useState("login");
-  const [errors, setErrors] = useState<ErrorState>({
+  const [errors, setErrors] = useState({
     general: "",
     username: "",
     password: "",
   });
 
-  const handleChange = (e: React.Key) => {
+  const handleChange = (e) => {
     setIsSubmitting(false);
-    setSelected(e);
+    setSelected(String(e));
     setErrors({ general: "", username: "", password: "" });
   };
 
@@ -145,7 +124,7 @@ export default function AuthCard() {
     setShowPassword((prev) => !prev);
   };
 
-  const login = async (data: AuthCredentials) => {
+  const login = async (data) => {
     return await api("/auth/token/login/", {
       method: "POST",
       headers: {
@@ -155,7 +134,7 @@ export default function AuthCard() {
     });
   };
 
-  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     const data = Object.fromEntries(new FormData(e.currentTarget));
@@ -176,11 +155,11 @@ export default function AuthCard() {
         router.push("/questions");
       } else {
         localStorage.setItem("user", JSON.stringify(response.data));
-        const retrieveToken = await login(data as AuthCredentials);
+        const retrieveToken = await login(data);
         localStorage.setItem("token", retrieveToken.data.auth_token);
         router.push("/questions");
       }
-    } catch (error: unknown) {
+    } catch (error) {
       console.error("Unexpected error:", error);
       if (axios.isAxiosError(error) && error.response) {
         const response = error.response.data;
