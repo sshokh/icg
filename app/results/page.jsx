@@ -183,7 +183,7 @@ export default function ResultsPage() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   async function fetchReviews(own = true) {
-    const response = await api(`/feedback/${own ? "get_feedback/" : ""}`);
+    const response = await api(`api/feedback/${own ? "get_feedback/" : ""}`);
     return response.data;
   }
 
