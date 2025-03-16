@@ -1,5 +1,5 @@
 "use client";
-  
+
 import React, { useState, useEffect } from "react";
 import { title } from "../../misc/primitives";
 import { Icon } from "@iconify/react";
@@ -21,8 +21,10 @@ import {
   Avatar,
 } from "@heroui/react";
 
-// Define missing icon components
-const Star = (props) => <Icon icon="solar:star-line-duotone" {...props} />;
+const Star = ({ filled, ...props }) => (
+  <Icon icon={filled ? "solar:star-bold" : "solar:star-outline"} {...props} />
+);
+
 const ArrowLeft = (props) => (
   <Icon icon="solar:arrow-left-line-duotone" {...props} />
 );
@@ -68,7 +70,7 @@ function ReviewCard({ review }) {
             </p>
             <div className="flex gap-1">
               {Array.from({ length: review.rating }, (_, i) => (
-                <Star key={i} className="fill-yellow-500 stroke-yellow-500" />
+                <Star key={i} filled className="text-yellow-500" />
               ))}
             </div>
           </div>
@@ -116,11 +118,8 @@ function ReviewModal({
                       className="p-1 transition-colors rounded-md hover:bg-muted"
                     >
                       <Star
-                        className={`sm:size-8 size-6 ${
-                          rating >= star
-                            ? "stroke-yellow-500 fill-yellow-500"
-                            : "stroke-yellow-500"
-                        }`}
+                        filled={star <= rating}
+                        className="sm:size-8 size-6 text-yellow-500"
                       />
                       <span className="sr-only">{star} stars</span>
                     </button>
@@ -162,7 +161,7 @@ function ReviewModal({
                     : "Submitting..."
                   : hasReview
                     ? "Update"
-                    : "Review"}
+                    : "Submit"}
               </Button>
             </ModalFooter>
           </div>
@@ -174,7 +173,7 @@ function ReviewModal({
 
 export default function ResultsPage() {
   const [data, setData] = useState([]);
-  const [rating, setRating] = useState(1);
+  const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [hasReview, setHasReview] = useState(null);
   const [modalMode, setModalMode] = useState("create");
@@ -183,7 +182,7 @@ export default function ResultsPage() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   async function fetchReviews(own = true) {
-    const response = await api(`api/feedback/${own ? "get_feedback/" : ""}`);
+    const response = await api(`/api/feedback/${own ? "get_feedback/" : ""}`);
     return response.data;
   }
 
@@ -216,7 +215,7 @@ export default function ResultsPage() {
       const isModeCreate = modalMode === "create";
 
       const my_new_feedback = await api({
-        url: `/feedback/${isModeCreate ? "feedback" : "update_feedback/"}`,
+        url: `/api/feedback/${isModeCreate ? "" : "update_feedback/"}`,
         method: isModeCreate ? "POST" : "PATCH",
         data: { rating, comment },
       });
@@ -233,6 +232,8 @@ export default function ResultsPage() {
       setComment(my_new_feedback.data.comment);
       onOpenChange();
       setModalMode("create");
+
+      setPublicReviews(await fetchReviews(false));
     } catch (error) {
       addToast({
         title: "Something went wrong",
@@ -260,8 +261,11 @@ export default function ResultsPage() {
           );
           setData(sortedMessage);
 
-          const my_feedback = await fetchReviews();
-          if (my_feedback) setHasReview(my_feedback);
+          await fetchReviews()
+            .catch((error) => {})
+            .then((data) => {
+              setHasReview(data);
+            });
 
           const public_feedbacks = await fetchReviews(false);
           setPublicReviews(public_feedbacks);
@@ -297,7 +301,7 @@ export default function ResultsPage() {
                 color="primary"
                 onPress={handleEditReview}
               >
-                <Star size={16} />
+                <Star size={32} className="text-white" filled />
                 Edit Review
               </Button>
             ) : (
