@@ -20,7 +20,7 @@ import {
   CardFooter,
   Avatar,
 } from "@heroui/react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 const Star = ({ filled, ...props }) => (
   <Icon icon={filled ? "solar:star-bold" : "solar:star-outline"} {...props} />
@@ -173,6 +173,7 @@ function ReviewModal({
 }
 
 export default function ResultsPage() {
+  
   const router = useRouter();
 
   const [data, setData] = useState([]);
