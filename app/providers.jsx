@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 
 export function Providers({ children }) {
   const router = useRouter();
-  const [verified, setVerified] = useState(false);
+  const [verified, setVerified] = useState(false)
 
   useEffect(() => {
     async function checkAuth() {
